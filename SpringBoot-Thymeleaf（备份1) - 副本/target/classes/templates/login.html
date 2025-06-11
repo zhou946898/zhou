@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="#{login.title}">Login Page</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(to bottom right, #e0f7fa, #b2ebf2);
+        }
+        .login-container {
+            transition: transform 0.3s ease;
+        }
+        .login-container:hover {
+            transform: scale(1.02);
+        }
+        input[type="text"],
+        input[type="password"] {
+            transition: border-color 0.3s ease;
+        }
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            border-color: #3b82f6;
+            outline: none;
+        }
+        input[type="submit"],
+        a.btn {
+            transition: background-color 0.3s ease;
+        }
+    </style>
+</head>
+<body class="flex justify-center items-center min-h-screen">
+<div class="login-container bg-white p-8 rounded-xl shadow-2xl w-11/12 max-w-md space-y-6">
+    <img class="logo mx-auto w-40" th:src="@{/img/logo_nei.png}" alt="Logo">
+    <h1 class="text-2xl font-bold text-center text-blue-700" th:text="#{login.Title_bar}"></h1>
+    <div class="language-switch text-center space-x-2">
+        <a href="?lang=en_US" class="text-blue-700 hover:text-blue-900">English</a>
+        <span class="text-gray-500">|</span>
+        <a href="?lang=zh_CN" class="text-blue-700 hover:text-blue-900">中文</a>
+    </div>
+    <p class="error text-red-500 text-center bg-white p-2 rounded-md shadow-md" id="errorMsg" th:if="${error}" th:text="${error}"></p>
+    <form action="#" th:action="@{/login}" method="post" class="space-y-6">
+        <div>
+            <label class="block text-gray-700 font-medium mb-1" th:text="#{login.username}" for="username">Username:</label>
+            <input type="text" id="username" name="username" class="w-full border border-gray-300 rounded-md p-3">
+        </div>
+        <div>
+            <label class="block text-gray-700 font-medium mb-1" th:text="#{login.password}" for="password">Password:</label>
+            <input type="password" id="password" name="password" class="w-full border border-gray-300 rounded-md p-3">
+        </div>
+        <div class="button-container flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+            <input type="submit" th:value="#{login.submit}" value="Login" class="bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-6 rounded-md">
+            <a href="/register" class="btn bg-green-700 hover:bg-green-800 text-white font-bold py-3 px-6 rounded-md text-center" th:text="#{register.submit}">注册</a>
+        </div>
+    </form>
+</div>
+<script>
+    const errorMsg = document.getElementById('errorMsg');
+    if (errorMsg) {
+        errorMsg.style.display = 'block';
+        setTimeout(() => {
+            errorMsg.style.display = 'none';
+        }, 3000);
+    }
+    window.onload = function() {
+        const storedUsername = localStorage.getItem('registeredUsername');
+        const storedPassword = localStorage.getItem('registeredPassword');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        if (storedUsername) {
+            usernameInput.value = storedUsername;
+        }
+        if (storedPassword) {
+            passwordInput.value = storedPassword;
+        }
+        localStorage.removeItem('registeredUsername');
+        localStorage.removeItem('registeredPassword');
+    };
+</script>
+</body>
+</html>

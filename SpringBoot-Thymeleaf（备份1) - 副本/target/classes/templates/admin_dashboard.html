@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <!-- 保留现有样式依赖（如 Bootstrap） -->
+    <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <title>管理员管理页面</title>
+    <style>
+        /* 复用现有页面样式 */
+        body {
+            background-color: #e3f2fd;
+            padding: 30px;
+        }
+        .container-box {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .tab-content {
+            padding: 20px;
+            border: 1px solid #dee2e6;
+            border-top: 0;
+            border-radius: 0 0 8px 8px;
+        }
+        table {
+            width: 100%;
+            text-align: center;
+        }
+        th, td {
+            vertical-align: middle !important;
+        }
+        .btn {
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body style="background-color: #e3f2fd;">
+<div class="container-box">
+    <!-- 顶部操作栏（与现有样式对齐） -->
+    <div class="top-bar">
+        <button class="btn btn-primary" onclick="location.href='/admin/logout'">安全退出</button>
+        <div>
+            <span>当前管理员：<strong th:text="${session.adminUsername}"></strong></span>
+            <button class="btn btn-primary ms-3" onclick="location.href='/admin/changePasswordPage'">修改密码</button>
+        </div>
+    </div>
+
+    <!-- Tab 切换导航（与现有按钮样式对齐） -->
+    <ul class="nav nav-tabs" id="adminTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="user-manage-tab" data-bs-toggle="tab"
+                    data-bs-target="#user-manage" type="button" role="tab" aria-controls="user-manage"
+                    aria-selected="true">用户管理</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="article-manage-tab" data-bs-toggle="tab"
+                    data-bs-target="#article-manage" type="button" role="tab" aria-controls="article-manage"
+                    aria-selected="false">文章管理</button>
+        </li>
+    </ul>
+
+    <!-- 内容容器（核心：通过 AJAX 局部刷新） -->
+    <div class="tab-content" id="adminTabsContent">
+        <!-- 用户管理 Tab -->
+        <div class="tab-pane fade show active" id="user-manage" role="tabpanel"
+             aria-labelledby="user-manage-tab">
+            <div id="userTabContent">
+                <!-- 这里通过 AJAX 加载内容，首次进入时手动触发 -->
+                <script>
+                    // 首次进入页面时加载用户列表
+                    fetch('/admin/dashboard/user')
+                        .then(response => response.text())
+                        .then(html => document.getElementById('userTabContent').innerHTML = html);
+                </script>
+            </div>
+        </div>
+
+        <!-- 文章管理 Tab -->
+        <div class="tab-pane fade" id="article-manage" role="tabpanel"
+             aria-labelledby="article-manage-tab">
+            <div id="articleTabContent">
+                <!-- 首次进入时加载文章列表 -->
+                <script>
+                    // 首次进入文章 Tab 时加载内容（可优化为切换时加载）
+                    // 若想切换时加载，可绑定 Tab 切换事件：
+                    // document.querySelector('#article-manage-tab').addEventListener('click', () => {
+                    //   fetch('/admin/dashboard/article')
+                    //     .then(response => response.text())
+                    //     .then(html => document.getElementById('articleTabContent').innerHTML = html);
+                    // });
+                    // 这里直接默认加载
+                    fetch('/admin/dashboard/article')
+                        .then(response => response.text())
+                        .then(html => document.getElementById('articleTabContent').innerHTML = html);
+                </script>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AJAX 搜索函数（通用） -->
+<script>
+    function searchContent(tabType) {
+        let searchParam, url;
+        if (tabType === 'user') {
+            searchParam = document.getElementById('userSearch').value;
+            url = `/admin/dashboard/user?username=${encodeURIComponent(searchParam)}`;
+        } else if (tabType === 'article') {
+            searchParam = document.getElementById('articleSearch').value;
+            url = `/admin/dashboard/article?title=${encodeURIComponent(searchParam)}`;
+        }
+
+        fetch(url)
+            .then(response => response.text())
+            .then(html => {
+                if (tabType === 'user') {
+                    document.getElementById('userTabContent').innerHTML = html;
+                } else {
+                    document.getElementById('articleTabContent').innerHTML = html;
+                }
+            });
+    }
+</script>
+
+<!-- 引入 Bootstrap JS（Tab 切换依赖） -->
+<script src="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
