@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员管理页面</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(to bottom right, #e0f7fa, #b2ebf2);
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        .dashboard-container {
+            background-color: white;
+            padding: 3rem;
+            border-radius: 1rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            width: 91.666667%;
+            max-width: 1200px;
+            min-height: 600px;
+            position: relative;
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            padding-top: 2rem;
+        }
+
+        .dashboard-container:hover {
+            transform: scale(1.02);
+        }
+
+        h1 {
+            text-align: center;
+            color: #1d4ed8;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 2rem;
+        }
+
+        th,
+        td {
+            border: 1px solid #d1d5db;
+            padding: 0.75rem;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f3f4f6;
+            color: #374151;
+            font-weight: 500;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+
+        a {
+            color: #1d4ed8;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        a:hover {
+            color: #fff;
+            text-decoration: underline;
+        }
+
+        .a_hover a:hover {
+            color: #1d4ed8;
+        }
+
+        /* 安全退出按钮样式 */
+        .logout-button {
+            background-color: #1d4ed8;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            font-weight: bold;
+            text-align: center;
+            text-decoration: none;
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .logout-button:hover {
+            background-color: #1e3a8a;
+            transform: scale(1.05);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 修改密码按钮样式 */
+        .change-password-button {
+            background-color: #1d4ed8;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            font-weight: bold;
+            text-align: center;
+            text-decoration: none;
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .change-password-button:hover {
+            background-color: #1e3a8a;
+            transform: scale(1.05);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 用户名显示样式 */
+        .username-display {
+            position: absolute;
+            top: 1.5rem;
+            right: 10rem;
+            color: #1d4ed8;
+            font-size: 0.875rem;
+        }
+
+        /* 搜索框样式 */
+        .search-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            width: 20%;
+        }
+
+        .search-input {
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            flex: 1;
+            margin-right: 0.5rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #1d4ed8;
+        }
+
+        .search-button {
+            background-color: #1d4ed8;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: bold;
+            text-align: center;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+            min-width: 6rem;
+        }
+
+        .search-button:hover {
+            background-color: #1e3a8a;
+        }
+
+        /* 手机端样式 */
+        @media (max-width: 768px) {
+            table {
+                display: none;
+            }
+
+            .dashboard-container {
+                padding: 1rem;
+                padding-top: 3rem;
+            }
+
+            .logout-button,
+            .change-password-button {
+                padding: 0.5rem 1rem;
+                font-size: 0.8rem;
+            }
+
+            .username-display {
+                top: 1.25rem;
+                right: 50%;
+                transform: translateX(50%);
+                font-size: 0.8rem;
+            }
+
+            h1 {
+                margin-top: 2rem;
+            }
+
+            .mobile-user-cards {
+                margin-top: 0rem;
+            }
+
+            .mobile-user-card {
+                background-color: white;
+                border: 1px solid #d1d5db;
+                border-radius: 8px;
+                padding: 1rem;
+                margin-bottom: 1rem;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            }
+
+            .mobile-user-card p {
+                margin: 0.5rem 0;
+                font-size: 0.9rem;
+            }
+
+            .mobile-user-card strong {
+                color: #374151;
+            }
+
+            .mobile-user-card a {
+                color: #1d4ed8;
+                text-decoration: none;
+                margin-right: 1rem;
+                transition: color 0.3s ease;
+            }
+
+            .mobile-user-card a:hover {
+                color: #1e3a8a;
+                text-decoration: underline;
+            }
+
+            .search-container {
+                margin-top: 2rem;
+                width: 100%;
+            }
+        }
+
+        /* 在电脑端隐藏手机端卡片布局 */
+        @media (min-width: 769px) {
+            .mobile-user-cards {
+                display: none;
+            }
+
+            .search-container {
+                position: absolute;
+                top: 5rem; /* 调整搜索框垂直位置，整体下移 */
+                left: 3rem;
+            }
+
+            table {
+                margin-top: 5rem; /* 增加表格与搜索框的间距为10px（这里1rem约等于16px，可按需微调） */
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="dashboard-container">
+    <!-- 安全退出按钮 -->
+    <a href="/admin/logout" class="logout-button">安全退出</a>
+    <!-- 显示用户名 -->
+    <span class="username-display">当前管理员：<span th:text="${session.adminUsername}"></span></span>
+    <!-- 修改密码按钮 -->
+    <a href="/admin/changePasswordPage" class="change-password-button">修改密码</a>
+    <h1>管理员管理页面</h1>
+    <!-- 搜索框 -->
+    <div class="search-container">
+        <input type="text" id="searchUsername" class="search-input" placeholder="根据用户名搜索">
+        <a href="#" onclick="searchUsers(); return false;" class="search-button">搜索</a>
+    </div>
+    <!-- 电脑端表格布局 -->
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>用户名</th>
+            <th>姓名</th>
+            <th>邮箱</th>
+            <th>学历</th>
+            <th>爱好</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="user : ${users}">
+            <td th:text="${user.id}"></td>
+            <td th:text="${user.username}"></td>
+            <td th:text="${user.name}"></td>
+            <td th:text="${user.email}"></td>
+            <td th:text="${user.education}"></td>
+            <td th:text="${user.hobbies}"></td>
+            <td class="a_hover">
+                <a th:href="@{/admin/user/delete(id=${user.id})}">删除</a>
+                <a th:href="@{/admin/user/edit/{id}(id=${user.id})}">修改</a>
+                <a th:href="@{/admin/setUserAsAdmin/{id}(id=${user.id})}">设为管理员</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <!-- 手机端卡片布局 -->
+    <div class="mobile-user-cards">
+        <div th:each="user : ${users}" class="mobile-user-card">
+            <p><strong>ID:</strong> <span th:text="${user.id}"></span></p>
+            <p><strong>用户名:</strong> <span th:text="${user.username}"></span></p>
+            <p><strong>姓名:</strong> <span th:text="${user.name}"></span></p>
+            <p><strong>邮箱:</strong> <span th:text="${user.email}"></span></p>
+            <p><strong>学历:</strong> <span th:text="${user.education}"></span></p>
+            <p><strong>爱好:</strong> <span th:text="${user.hobbies}"></span></p>
+            <p>
+                <a th:href="@{/admin/user/delete(id=${user.id})}">删除</a>
+                <a th:href="@{/admin/user/edit/{id}(id=${user.id})}">修改</a>
+                <a th:href="@{/admin/setUserAsAdmin/{id}(id=${user.id})}">设为管理员</a>
+            </p>
+        </div>
+    </div>
+</div>
+<script>
+    function searchUsers() {
+        const username = document.getElementById('searchUsername').value;
+        window.location.href = `/admin/dashboard?username=${encodeURIComponent(username)}`;
+    }
+</script>
+</body>
+
+</html>

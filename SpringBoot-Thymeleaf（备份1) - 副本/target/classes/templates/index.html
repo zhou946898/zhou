@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户仪表盘</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .bg-gradient-custom {
+            background: linear-gradient(315deg, #f0f8ff 0%, #30ffd6 100%);
+        }
+
+        .hover-scale {
+            transition: transform 0.3s ease;
+        }
+
+        .hover-scale:hover {
+            transform: scale(1.05);
+        }
+
+        .nav-link {
+            transition: color 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: #1da25f;
+        }
+
+        .active {
+            color: #1da25f;
+            font-weight: bold;
+        }
+
+        /* 发布成功提示框样式 */
+        #successAlert {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #48bb78;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 0.375rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+            z-index: 1000;
+        }
+
+        /* 文章详情模态框样式 */
+        #articleDetailsModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #articleDetailsModalContent {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            max-width: 90%;
+            max-height: 95%;
+            min-height: 700px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        #articleDetailsTitle {
+            text-align: center;
+            font-size: 2.25rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        #articleDetailsContent {
+            font-size: 1.125rem;
+            margin-bottom: 2rem;
+        }
+
+        #articleDetailsPublisher,
+        #articleDetailsPublishDate {
+            position: absolute;
+            right: 2rem;
+            color: #6b7280;
+        }
+
+        #articleDetailsPublisher {
+            bottom: 3rem;
+        }
+
+        #articleDetailsPublishDate {
+            bottom: 1rem;
+        }
+
+        /* 加载状态样式 */
+        .loading {
+            text-align: center;
+            padding: 20px;
+            font-size: 1.2rem;
+            color: #6b7280;
+        }
+
+        /* 无文章提示样式 */
+        .no-articles {
+            text-align: center;
+            padding: 20px;
+            font-size: 1.2rem;
+            color: #6b7280;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 300px;
+            min-width: 320%;
+            width: 100%;
+            height: 100%;
+        }
+
+        .my_article {
+            text-align: center;
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+
+        /*修改按钮*/
+        .bg-yellow-500 {
+            width: 40px;
+            height: 20px;
+            font-size: 10px;
+        }
+
+        .py-1 {
+            padding-top: 0.12rem;
+        }
+
+        /*删除按钮*/
+        .bg-red-500 {
+            width: 40px;
+            height: 20px;
+            font-size: 10px;
+        }
+    </style>
+</head>
+
+<body class="flex flex-col min-h-screen">
+<!-- 发布成功提示框 -->
+<div id="successAlert" class="hidden">文章发布成功！</div>
+<!-- 导航栏 -->
+<nav class="bg-white shadow-md py-4">
+    <div class="container mx-auto px-6 flex justify-between items-center">
+        <a href="#" class="text-3xl font-bold text-gray-800">用户仪表盘</a>
+        <div class="flex space-x-6">
+            <a href="#" class="nav-link text-gray-600" onclick="showPage('mainContent')">首页</a>
+            <a href="#" class="nav-link text-gray-600" onclick="showPage('aboutMeContent')">关于我</a>
+            <a href="#" class="nav-link text-gray-600" onclick="showPage('contactMeContent')">联系我</a>
+            <a href="#" class="bg-gradient-to-r from-cyan-400 to-green-400 text-white py-2 px-3 rounded-md hover:bg-gradient-to-r hover:from-cyan-500 hover:to-green-500 transition-colors duration-300 mr-2" onclick="window.location.href='/login'">登录</a>
+            <a  class="bg-gradient-to-r from-cyan-400 to-green-400 text-white py-2 px-3 rounded-md hover:bg-gradient-to-r hover:from-cyan-500 hover:to-green-500 transition-colors duration-300" onclick="window.location.href='/register'">注册</a>
+            <button onclick="showCreatePostModal()" class="bg-gradient-to-r from-purple-400 to-pink-400 text-white py-2 px-6 rounded-md hover:bg-gradient-to-r hover:from-purple-500 hover:to-pink-500 transition-colors duration-300">发布文章</button>
+        </div>
+    </div>
+</nav>
+
+<!-- 英雄区域 -->
+<section class="bg-cover bg-center py-24" style="background-image: url('https://picsum.photos/1920/1080');">
+    <div class="container mx-auto px-6 text-center text-white">
+        <h1 class="text-5xl font-bold mb-4" th:text="${user != null ? '欢迎，' + user.name : '欢迎，请登录'}">欢迎，请登录</h1>
+        <p class="text-xl mb-8">探索我的精彩博客内容</p>
+        <a href="#" class="bg-white text-gray-800 py-3 px-8 rounded-md hover:bg-gray-200 transition-colors duration-300">查看最新文章</a>
+    </div>
+</section>
+
+<!-- 主内容区 -->
+<main class="flex-grow p-12 hidden" id="mainContent">
+    <div class="container mx-auto">
+        <!-- 文章搜索和分类 -->
+        <div class="flex justify-between items-center mb-4">
+            <input type="text" placeholder="搜索文章" class="border border-gray-300 rounded-md px-3 py-2 w-1/2"
+                   id="searchInput">
+            <select class="border border-gray-300 rounded-md px-3 py-2" id="categorySelect">
+                <option value="all">所有分类</option>
+                <option value="tech">技术</option>
+                <option value="life">生活</option>
+                <option value="travel">旅行</option>
+            </select>
+        </div>
+        <!-- 文章列表展示区域 -->
+        <div id="articleList" class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- 这里文章数据将通过JavaScript动态填充 -->
+        </div>
+        <!-- 分页 -->
+        <div class="flex justify-center mt-8">
+            <a href="#" class="text-blue-600 mr-4">上一页</a>
+            <a href="#" class="text-blue-600 ml-4">下一页</a>
+        </div>
+    </div>
+</main>
+
+<!-- 关于我页面 -->
+<div class="flex-grow p-12 hidden" id="aboutMeContent">
+    <div class="container mx-auto bg-gradient-custom p-8 rounded-lg shadow-xl hover-scale">
+        <div class="flex flex-col md:flex-row items-center">
+            <img src="https://picsum.photos/200/200" alt="用户头像" class="rounded-full mb-4 md:mb-0 md:mr-8">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">关于我</h2>
+                <p class="text-gray-600 mb-4">我是一个热爱分享的博主，喜欢在博客上记录自己的生活和技术经验。</p>
+                <p class="text-blue-600 underline cursor-pointer" onclick="showChangePasswordModal()">修改密码</p>
+            </div>
+        </div>
+        <!-- 添加查看我的文章按钮 -->
+        <h2 class="my_article">我的文章</h2>
+        <!-- 添加占位元素用于显示文章列表 -->
+        <div id="userArticleList" class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- 这里文章数据将通过JavaScript动态填充 -->
+        </div>
+    </div>
+</div>
+
+<!-- 联系我页面 -->
+<div class="flex-grow p-12 hidden" id="contactMeContent">
+    <div class="container mx-auto bg-white p-8 rounded-lg shadow-xl hover-scale">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">联系我</h2>
+        <form id="contactForm" class="space-y-4">
+            <div>
+                <label for="contactName" class="block text-gray-700 font-bold mb-1">姓名</label>
+                <input type="text" id="contactName" name="contactName" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-cyan-400 focus:border-cyan-400">
+            </div>
+            <div>
+                <label for="contactEmail" class="block text-gray-700 font-bold mb-1">邮箱</label>
+                <input type="email" id="contactEmail" name="contactEmail" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-cyan-400 focus:border-cyan-400">
+            </div>
+            <div>
+                <label for="contactMessage" class="block text-gray-700 font-bold mb-1">留言</label>
+                <textarea id="contactMessage" name="contactMessage" rows="6" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-cyan-400 focus:border-cyan-400"></textarea>
+            </div>
+            <input type="button" value="发送" onclick="submitContactForm()" class="bg-gradient-to-r from-cyan-400 to-green-400 text-white py-2 px-4 rounded-md hover:bg-gradient-to-r hover:from-cyan-500 hover:to-green-500 transition-colors duration-300">
+        </form>
+    </div>
+</div>
+
+<!-- 修改密码模态框 -->
+<div class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 hidden justify-center items-center" id="changePasswordModal">
+    <div class="bg-gradient-custom p-8 rounded-lg shadow-xl w-full max-w-md mx-4 relative">
+        <button type="button" onclick="hideChangePasswordModal()" class="absolute top-2 right-2 text-2xl text-gray-600 hover:text-gray-800 focus:outline-none">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">修改密码</h2>
+        <form action="#" th:action="@{/changePassword}" method="post" class="space-y-4">
+            <div>
+                <label for="oldPassword" class="block text-gray-700 font-bold mb-1">原密码:</label>
+                <input type="password" id="oldPassword" name="oldPassword" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-cyan-400 focus:border-cyan-400">
+            </div>
+            <div>
+                <label for="newPassword" class="block text-gray-700 font-bold mb-1">新密码:</label>
+                <input type="password" id="newPassword" name="newPassword" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-cyan-400 focus:border-cyan-400">
+            </div>
+            <input type="submit" value="修改密码" class="bg-gradient-to-r from-cyan-400 to-green-400 text-white py-2 px-4 rounded-md hover:bg-gradient-to-r hover:from-cyan-500 hover:to-green-500 transition-colors duration-300">
+        </form>
+    </div>
+</div>
+
+<!-- 发布文章模态框 -->
+<div class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 hidden justify-center items-center" id="createPostModal">
+    <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md mx-4 relative">
+        <button type="button" onclick="hideCreatePostModal()" class="absolute top-2 right-2 text-2xl text-gray-600 hover:text-gray-800 focus:outline-none">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">发布文章</h2>
+        <form action="#" th:action="@{/createPost}" method="post" class="space-y-4">
+            <div>
+                <label for="postTitle" class="block text-gray-700 font-bold mb-1">文章标题</label>
+                <input type="text" id="postTitle" name="postTitle" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-cyan-400 focus:border-cyan-400">
+            </div>
+            <div>
+                <label for="postCategory" class="block text-gray-700 font-bold mb-1">文章分类</label>
+                <select id="postCategory" name="postCategory" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-cyan-400 focus:border-cyan-400">
+                    <option value="tech">技术</option>
+                    <option value="life">生活</option>
+                    <option value="travel">旅行</option>
+                </select>
+            </div>
+            <div>
+                <label for="postContent" class="block text-gray-700 font-bold mb-1">文章内容</label>
+                <textarea id="postContent" name="postContent" rows="6" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-cyan-400 focus:border-cyan-400"></textarea>
+            </div>
+            <button type="button" onclick="previewPost()" class="bg-yellow-400 text-white py-2 px-4 rounded-md hover:bg-yellow-500 transition-colors duration-300">预览</button>
+            <input type="submit" value="发布" onclick="submitPost(); return false;" class="bg-gradient-to-r from-purple-400 to-pink-400 text-white py-2 px-4 rounded-md hover:bg-gradient-to-r hover:from-purple-500 hover:to-pink-500 transition-colors duration-300">
+        </form>
+        <div id="postPreview" class="hidden mt-4">
+            <h3 class="text-xl font-bold text-gray-800 mb-2">文章预览</h3>
+            <div id="previewTitle" class="text-lg font-bold mb-2"></div>
+            <div id="previewCategory" class="text-gray-600 mb-2"></div>
+            <div id="previewContent"></div>
+        </div>
+    </div>
+</div>
+
+<!-- 文章详情模态框 -->
+<div id="articleDetailsModal" class="flex">
+    <div id="articleDetailsModalContent" class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md mx-4 relative">
+        <button type="button" onclick="hideArticleDetailsModal()" class="absolute top-2 right-2 text-2xl text-gray-600 hover:text-gray-800 focus:outline-none">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <div id="articleDetailsTitle" class="text-3xl font-bold text-gray-800 mb-4"></div>
+        <div id="articleDetailsContent" class="text-gray-700"></div>
+        <div id="articleDetailsPublisher" class="text-gray-600 mb-2"></div>
+        <div id="articleDetailsPublishDate" class="text-gray-600 mb-2"></div>
+    </div>
+</div>
+
+<!-- 修改文章模态框 -->
+<div class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 hidden justify-center items-center" id="updatePostModal">
+    <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md mx-4 relative">
+        <button type="button" onclick="hideUpdatePostModal()" class="absolute top-2 right-2 text-2xl text-gray-600 hover:text-gray-800 focus:outline-none">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">修改文章</h2>
+        <form action="#" id="updatePostForm" class="space-y-4">
+            <div>
+                <label for="updatePostTitle" class="block text-gray-700 font-bold mb-1">文章标题</label>
+                <input type="text" id="updatePostTitle" name="updatePostTitle" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-cyan-400 focus:border-cyan-400">
+            </div>
+            <div>
+                <label for="updatePostContent" class="block text-gray-700 font-bold mb-1">文章内容</label>
+                <textarea id="updatePostContent" name="updatePostContent" rows="6" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-cyan-400 focus:border-cyan-400"></textarea>
+            </div>
+            <input type="hidden" id="updateArticleId" name="updateArticleId">
+            <input type="submit" value="保存修改" onclick="submitUpdatePost(); return false;" class="bg-gradient-to-r from-purple-400 to-pink-400 text-white py-2 px-4 rounded-md hover:bg-gradient-to-r hover:from-purple-500 hover:to-pink-500 transition-colors duration-300">
+        </form>
+    </div>
+</div>
+
+<!-- 页脚 -->
+<footer class="bg-gray-800 text-white py-8">
+    <div class="container mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div>
+            <h3 class="text-xl font-bold mb-4">关于博客</h3>
+            <p>这是一个个人博客，分享我的生活、技术和见解。</p>
+        </div>
+        <div>
+            <h3 class="text-xl font-bold mb-4">快速链接</h3>
+            <ul class="space-y-2">
+                <li><a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">首页</a></li>
+                <li><a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">关于我</a></li>
+                <li><a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">联系我</a></li>
+            </ul>
+        </div>
+        <div>
+            <h3 class="text-xl font-bold mb-4">社交媒体</h3>
+            <div class="flex space-x-4">
+                <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300"><i class="fab fa-twitter"></i></a>
+                <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300"><i class="fab fa-instagram"></i></a>
+            </div>
+        </div>
+    </div>
+    <div class="container mx-auto px-6 text-center text-gray-400 mt-8">
+        <marquee>&copy; 2025 用户仪表盘. 保留所有权利.</marquee>
+    </div>
+</footer>
+
+<script>
+    // 标记用户是否登录，这里默认未登录，实际应用中应根据后端返回的登录状态设置
+    let isLoggedIn = false;
+
+    function showChangePasswordModal() {
+        if (!isLoggedIn) {
+            alert('请先登录！');
+            return;
+        }
+        document.getElementById('changePasswordModal').classList.remove('hidden');
+        document.getElementById('changePasswordModal').classList.add('flex');
+    }
+
+    function hideChangePasswordModal() {
+        document.getElementById('changePasswordModal').classList.remove('flex');
+        document.getElementById('changePasswordModal').classList.add('hidden');
+    }
+
+    function showCreatePostModal() {
+        if (!isLoggedIn) {
+            alert('请先登录！');
+            return;
+        }
+        document.getElementById('createPostModal').classList.remove('hidden');
+        document.getElementById('createPostModal').classList.add('flex');
+    }
+
+    function hideCreatePostModal() {
+        document.getElementById('createPostModal').classList.remove('flex');
+        document.getElementById('createPostModal').classList.add('hidden');
+    }
+
+    function showPage(pageId) {
+        if (pageId === 'aboutMeContent' && !isLoggedIn) {
+            alert('请先登录！');
+            return;
+        }
+        const pages = ['mainContent', 'aboutMeContent', 'contactMeContent'];
+        pages.forEach(page => {
+            document.getElementById(page).classList.add('hidden');
+        });
+        document.getElementById(pageId).classList.remove('hidden');
+        const navLinks = document.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+        });
+        const activeLink = document.querySelector(`.nav-link[onclick="showPage('${pageId}')"]`);
+        activeLink.classList.add('active');
+    }
+
+    function previewPost() {
+        if (!isLoggedIn) {
+            alert('请先登录！');
+            return;
+        }
+        const title = document.getElementById('postTitle').value;
+        const category = document.getElementById('postCategory').value;
+        const content = document.getElementById('postContent').value;
+        document.getElementById('previewTitle').textContent = title;
+        document.getElementById('previewCategory').textContent = `分类: ${category}`;
+        document.getElementById('previewContent').textContent = content;
+        document.getElementById('postPreview').classList.remove('hidden');
+    }
+
+    function submitPost() {
+        if (!isLoggedIn) {
+            alert('请先登录！');
+            return;
+        }
+        const postTitle = document.getElementById('postTitle').value;
+        const postCategory = document.getElementById('postCategory').value;
+        const postContent = document.getElementById('postContent').value;
+
+        const formData = new URLSearchParams();
+        formData.append('postTitle', postTitle);
+        formData.append('postCategory', postCategory);
+        formData.append('postContent', postContent);
+
+        fetch('/createPost', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: formData
+        })
+            .then(response => {
+                if (response.ok) {
+                    return response.text();
+                } else {
+                    throw new Error('请求失败');
+                }
+            })
+            .then(data => {
+                if (data.includes('文章发布成功！')) {
+                    showSuccessAlert();
+                    hideCreatePostModal();
+                    // 发布成功后重新加载文章列表
+                    loadArticles();
+                } else {
+                    alert('文章发布失败，请重试！');
+                }
+            })
+            .catch(error => {
+                console.error('发布文章时出错:', error);
+                alert('发布文章时出现网络错误，请稍后重试！');
+            });
+    }
+
+    function showSuccessAlert() {
+        const successAlert = document.getElementById('successAlert');
+        successAlert.classList.remove('hidden');
+        successAlert.style.opacity = 1;
+
+        setTimeout(() => {
+            successAlert.style.opacity = 0;
+            setTimeout(() => {
+                successAlert.classList.add('hidden');
+            }, 300);
+        }, 3000);
+    }
+
+    function showArticleDetails(articleId) {
+        if (!isLoggedIn) {
+            alert('请先登录！');
+            return;
+        }
+        fetch(`/article/${articleId}`)
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('获取文章详情失败');
+                }
+            })
+            .then(article => {
+                const titleElement = document.getElementById('articleDetailsTitle');
+                const contentElement = document.getElementById('articleDetailsContent');
+                const publisherElement = document.getElementById('articleDetailsPublisher');
+                const publishDateElement = document.getElementById('articleDetailsPublishDate');
+
+                titleElement.textContent = ` ${article.title}`;
+                contentElement.textContent = ` ${article.content}`;
+                publisherElement.textContent = `作者: ${article.publisherName}`;
+                publishDateElement.textContent = `发布时间: ${new Date(article.publishDate).toLocaleString()}`;
+
+                document.getElementById('articleDetailsModal').style.display = 'flex';
+            })
+            .catch(error => {
+                console.error('获取文章详情时出错:', error);
+                alert('获取文章详情时出现网络错误，请稍后重试！');
+            });
+    }
+
+    function hideArticleDetailsModal() {
+        document.getElementById('articleDetailsModal').style.display = 'none';
+    }
+
+    // 假设 thymesVar 函数用于获取 Thymeleaf 变量
+    function thymesVar(name) {
+        const script = document.querySelector(`script[data-thymes-var="${name}"]`);
+        return script ? script.textContent : null;
+    }
+
+    // 加载文章列表
+    function loadArticles() {
+        const articleList = document.getElementById('articleList');
+        articleList.innerHTML = '<div class="loading">加载中...</div>';
+        fetch('/articles')
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('获取文章列表失败');
+                }
+            })
+            .then(articles => {
+                // 这里假设文章对象有 category 属性
+                localStorage.setItem('articles', JSON.stringify(articles));
+                const searchInput = document.getElementById('searchInput').value.toLowerCase();
+                const categorySelect = document.getElementById('categorySelect').value;
+                displayArticles(articles, searchInput, categorySelect);
+            })
+            .catch(error => {
+                console.error('加载文章列表时出错:', error);
+                alert('加载文章列表时出现网络错误，请稍后重试！');
+            });
+    }
+
+    // 显示文章列表
+    function displayArticles(articles, searchInput, categorySelect) {
+        const articleList = document.getElementById('articleList');
+        const filteredArticles = articles.filter(article => {
+            const titleMatch = article.title.toLowerCase().includes(searchInput);
+            const categoryMatch = categorySelect === 'all' || article.category === categorySelect;
+            return titleMatch && categoryMatch;
+        });
+
+        if (filteredArticles.length === 0) {
+            articleList.innerHTML = '<div class="no-articles">未发布过文章。</div>';
+        } else {
+            articleList.innerHTML = '';
+            filteredArticles.forEach(article => {
+                const articleDiv = document.createElement('div');
+                articleDiv.classList.add('bg-white', 'p-8', 'rounded-lg', 'shadow-xl', 'hover-scale');
+
+                const title = document.createElement('h3');
+                title.classList.add('text-2xl', 'font-bold', 'text-gray-800', 'mb-2');
+                title.textContent = article.title;
+
+                const summary = document.createElement('p');
+                summary.classList.add('text-gray-600');
+                if (article.content) {
+                    summary.textContent = article.content.slice(0, 50) + '...';
+                } else {
+                    summary.textContent = '文章内容未获取到';
+                }
+
+                const infoDiv = document.createElement('div');
+                infoDiv.classList.add('flex', 'justify-between', 'items-center', 'mt-2');
+
+                const publishDate = document.createElement('span');
+                publishDate.classList.add('text-gray-500');
+                publishDate.textContent = '发布时间: ' + new Date().toLocaleDateString();
+
+                const readMore = document.createElement('a');
+                readMore.classList.add('text-blue-600', 'underline');
+                readMore.textContent = '查看全文';
+                readMore.dataset.articleId = article.id;
+                readMore.onclick = function () {
+                    showArticleDetails(this.dataset.articleId);
+                };
+
+                infoDiv.appendChild(publishDate);
+                infoDiv.appendChild(readMore);
+
+                articleDiv.appendChild(title);
+                articleDiv.appendChild(summary);
+                articleDiv.appendChild(infoDiv);
+
+                articleList.appendChild(articleDiv);
+            });
+        }
+    }
+
+    function filterArticles() {
+        const searchInput = document.getElementById('searchInput').value.toLowerCase();
+        const categorySelect = document.getElementById('categorySelect').value;
+        const articles = JSON.parse(localStorage.getItem('articles')) || [];
+        displayArticles(articles, searchInput, categorySelect);
+    }
+
+    // 获取个人发布的文章
+    window.onload = function () {
+        const userArticleList = document.getElementById('userArticleList');
+        userArticleList.innerHTML = '<div class="loading">加载中...</div>';
+        fetch('/user/articles')
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('获取文章列表失败');
+                }
+            })
+            .then(articles => {
+                displayUserArticles(articles);
+            })
+            .catch(error => {
+                console.error('获取用户文章列表时出错:', error);
+                alert('获取用户文章列表时出现网络错误，请稍后重试！');
+                userArticleList.innerHTML = '<div class="no-articles">获取文章列表失败，请稍后重试。</div>';
+            });
+
+        // 确保文章列表在页面加载时显示
+        loadArticles();
+    };
+
+    // 显示个人发布的文章列表
+    function displayUserArticles(articles) {
+        const userArticleList = document.getElementById('userArticleList');
+        userArticleList.innerHTML = '';
+        const filteredArticles = articles;
+
+        if (filteredArticles.length === 0) {
+            userArticleList.innerHTML = '<div class="no-articles">未发布过文章。</div>';
+        } else {
+            filteredArticles.forEach(article => {
+                const articleDiv = document.createElement('div');
+                articleDiv.classList.add('bg-white', 'p-8', 'rounded-lg', 'shadow-xl', 'hover-scale');
+
+                const title = document.createElement('h3');
+                title.classList.add('text-2xl', 'font-bold', 'text-gray-800', 'mb-2');
+                title.textContent = article.title;
+
+                const summary = document.createElement('p');
+                summary.classList.add('text-gray-600');
+                if (article.content) {
+                    summary.textContent = article.content.slice(0, 50) + '...';
+                } else {
+                    summary.textContent = '文章内容未获取到';
+                }
+
+                const infoDiv = document.createElement('div');
+                infoDiv.classList.add('flex', 'justify-between', 'items-center', 'mt-2');
+                const publishDate = document.createElement('span');
+                publishDate.classList.add('text-gray-500');
+                publishDate.textContent = '发布时间: ' + new Date().toLocaleDateString();
+
+                const actionsDiv = document.createElement('div');
+                actionsDiv.classList.add('flex', 'space-x-2');
+
+                const editButton = document.createElement('button');
+                editButton.classList.add('bg-yellow-500', 'text-white', 'py-1', 'px-2', 'rounded-md', 'hover:bg-yellow-600', 'transition-colors', 'duration-300');
+                editButton.textContent = '修改';
+                editButton.onclick = function () {
+                    showUpdatePostModal(article.id, article.title, article.content);
+                };
+
+                const deleteButton = document.createElement('button');
+                deleteButton.classList.add('bg-red-500', 'text-white', 'py-1', 'px-2', 'rounded-md');
+                deleteButton.textContent = '删除';
+                deleteButton.onclick = function () {
+                    if (confirm('确定要删除这篇文章吗？')) {
+                        deleteArticle(article.id);
+                    }
+                };
+
+                actionsDiv.appendChild(editButton);
+                actionsDiv.appendChild(deleteButton);
+
+                infoDiv.appendChild(publishDate);
+                infoDiv.appendChild(actionsDiv);
+
+                articleDiv.appendChild(title);
+                articleDiv.appendChild(summary);
+                articleDiv.appendChild(infoDiv);
+
+                userArticleList.appendChild(articleDiv);
+            });
+        }
+    }
+
+    function showUpdatePostModal(articleId, title, content) {
+        const updatePostTitle = document.getElementById('updatePostTitle');
+        const updatePostContent = document.getElementById('updatePostContent');
+        const updateArticleId = document.getElementById('updateArticleId');
+
+        updatePostTitle.value = title;
+        updatePostContent.value = content;
+        updateArticleId.value = articleId;
+
+        document.getElementById('updatePostModal').classList.remove('hidden');
+        document.getElementById('updatePostModal').classList.add('flex');
+    }
+
+    function hideUpdatePostModal() {
+        document.getElementById('updatePostModal').classList.remove('flex');
+        document.getElementById('updatePostModal').classList.add('hidden');
+    }
+
+    function submitUpdatePost() {
+        const updatePostTitle = document.getElementById('updatePostTitle').value;
+        const updatePostContent = document.getElementById('updatePostContent').value;
+        const updateArticleId = document.getElementById('updateArticleId').value;
+
+        const formData = new URLSearchParams();
+        formData.append('updatePostTitle', updatePostTitle);
+        formData.append('updatePostContent', updatePostContent);
+        formData.append('updateArticleId', updateArticleId);
+
+        fetch('/updatePost', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: formData
+        })
+            .then(response => {
+                if (response.ok) {
+                    return response.text();
+                } else {
+                    throw new Error('请求失败');
+                }
+            })
+            .then(data => {
+                if (data.includes('文章修改成功！')) {
+                    alert('文章修改成功！');
+                    hideUpdatePostModal();
+                    // 修改成功后重新加载文章列表
+                    loadArticles();
+                    displayUserArticles(JSON.parse(localStorage.getItem('articles')) || []);
+                } else {
+                    alert('文章修改失败，请重试！');
+                }
+            })
+            .catch(error => {
+                console.error('修改文章时出错:', error);
+                alert('修改文章时出现网络错误，请稍后重试！');
+            });
+    }
+
+    function deleteArticle(articleId) {
+        fetch(`/deleteArticle/${articleId}`, {
+            method: 'DELETE'
+        })
+            .then(response => {
+                if (response.ok) {
+                    return response.text();
+                } else {
+                    throw new Error('请求失败');
+                }
+            })
+            .then(data => {
+                if (data.includes('文章删除成功！')) {
+                    alert('文章删除成功！');
+                    // 删除成功后重新加载文章列表
+                    loadArticles();
+                    displayUserArticles(JSON.parse(localStorage.getItem('articles')) || []);
+                } else {
+                    alert('文章删除失败，请重试！');
+                }
+            })
+            .catch(error => {
+                console.error('删除文章时出错:', error);
+                alert('删除文章时出现网络错误，请稍后重试！');
+            });
+    }
+
+    function submitContactForm() {
+        const contactName = document.getElementById('contactName').value;
+        const contactEmail = document.getElementById('contactEmail').value;
+        const contactMessage = document.getElementById('contactMessage').value;
+
+        if (!contactName || !contactEmail || !contactMessage) {
+            alert('请填写完整的信息！');
+            return;
+        }
+
+        const formData = new URLSearchParams();
+        formData.append('contactName', contactName);
+        formData.append('contactEmail', contactEmail);
+        formData.append('contactMessage', contactMessage);
+
+        fetch('/contact', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: formData
+        })
+            .then(response => {
+                if (response.ok) {
+                    return response.text();
+                } else {
+                    throw new Error('请求失败');
+                }
+            })
+            .then(data => {
+                if (data.includes('留言提交成功！')) {
+                    alert('留言提交成功！我们会尽快回复您。');
+                    document.getElementById('contactForm').reset();
+                } else {
+                    alert('留言提交失败，请重试！');
+                }
+            })
+            .catch(error => {
+                console.error('提交留言时出错:', error);
+                alert('提交留言时出现网络错误，请稍后重试！');
+            });
+    }
+
+    // 初始化页面显示首页内容
+    showPage('mainContent');
+
+    // 绑定搜索和分类筛选事件
+    document.getElementById('searchInput').addEventListener('input', filterArticles);
+    document.getElementById('categorySelect').addEventListener('change', filterArticles);
+</script>
+</body>
+</html>

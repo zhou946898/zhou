@@ -1,0 +1,16 @@
+com\zyq\springbootthymeleaf\repository\UserRepository.class
+com\zyq\springbootthymeleaf\entity\Admin.class
+com\zyq\springbootthymeleaf\SpringBootThymeleafApplication.class
+com\zyq\springbootthymeleaf\demos\web\PathVariableController.class
+com\zyq\springbootthymeleaf\repository\ArticleRepository.class
+com\zyq\springbootthymeleaf\entity\Article.class
+com\zyq\springbootthymeleaf\demos\web\BasicController.class
+com\zyq\springbootthymeleaf\controller\AdminController.class
+com\zyq\springbootthymeleaf\controller\ArticleController.class
+com\zyq\springbootthymeleaf\controller\VerificationController.class
+com\zyq\springbootthymeleaf\controller\DashboardController.class
+com\zyq\springbootthymeleaf\demos\web\User.class
+com\zyq\springbootthymeleaf\config\MyLocaleResovel.class
+com\zyq\springbootthymeleaf\controller\UserController.class
+com\zyq\springbootthymeleaf\entity\User.class
+com\zyq\springbootthymeleaf\repository\AdminRepository.class
