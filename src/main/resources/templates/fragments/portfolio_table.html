@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>作品集管理</title>
+  <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    table {
+      width: 100%;
+      text-align: center;
+    }
+    th, td {
+      vertical-align: middle !important;
+    }
+    .btn {
+      margin-right: 8px;
+    }
+    .portfolio-cover {
+      max-width: 100px;
+      max-height: 80px;
+      object-fit: cover;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="mb-3">
+    <button class="btn btn-success" onclick="openAddPortfolioModal()">新增作品</button>
+    <input type="text" id="portfolioSearch" placeholder="搜索作品标题" class="form-control d-inline-block w-25 ms-2">
+    <button class="btn btn-primary" onclick="searchContent('portfolio')">搜索</button>
+  </div>
+  <table class="table table-bordered table-striped">
+    <thead>
+    <tr>
+      <th>ID</th>
+      <th>封面</th>
+      <th>标题</th>
+      <th>分类</th>
+      <th>操作</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- 使用Thymeleaf直接渲染数据 -->
+    <tr th:each="project : ${projects}">
+      <td th:text="${project.id}"></td>
+      <td><img th:src="@{/uploads/portfolio/}+${project.coverImage}" class="portfolio-cover" alt="封面"></td>
+      <td th:text="${project.title}"></td>
+      <td th:text="${project.category}"></td>
+      <td>
+        <button class="btn btn-primary" onclick="openEditPortfolioModal('${project.id}')">编辑</button>
+        <button class="btn btn-danger" onclick="deletePortfolio('${project.id}')">删除</button>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- 新增/编辑作品集模态框 -->
+<div class="modal fade" id="portfolioModal" tabindex="-1" aria-labelledby="portfolioModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="portfolioModalLabel">作品集信息</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="portfolioForm" enctype="multipart/form-data">
+          <input type="hidden" id="portfolioId" name="id">
+          <div class="mb-3">
+            <label for="title" class="form-label">标题</label>
+            <input type="text" class="form-control" id="title" name="title" required>
+          </div>
+          <div class="mb-3">
+            <label for="description" class="form-label">描述</label>
+            <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="content" class="form-label">内容</label>
+            <textarea class="form-control" id="content" name="content" rows="5"></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="category" class="form-label">分类</label>
+            <select class="form-control" id="category" name="category">
+              <option value="website">网站</option>
+              <option value="app">应用</option>
+              <option value="data">数据可视化</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="coverImage" class="form-label">封面图片</label>
+            <input type="file" class="form-control" id="coverImage" name="coverImage">
+            <img id="currentCover" class="mt-2 portfolio-cover" style="display: none;" alt="当前封面">
+          </div>
+          <div class="mb-3">
+            <label for="projectUrl" class="form-label">项目链接</label>
+            <input type="url" class="form-control" id="projectUrl" name="projectUrl">
+          </div>
+          <div class="mb-3">
+            <label for="githubUrl" class="form-label">GitHub 链接</label>
+            <input type="url" class="form-control" id="githubUrl" name="githubUrl">
+          </div>
+          <div class="mb-3">
+            <label for="duration" class="form-label">项目周期</label>
+            <input type="text" class="form-control" id="duration" name="duration">
+          </div>
+          <div class="mb-3">
+            <label for="tags" class="form-label">标签（逗号分隔）</label>
+            <input type="text" class="form-control" id="tags" name="tags">
+          </div>
+          <div class="mb-3">
+            <label for="startDate" class="form-label">开始日期</label>
+            <input type="date" class="form-control" id="startDate" name="startDate">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+        <button type="button" class="btn btn-primary" onclick="savePortfolio()">保存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 打开新增作品集模态框
+  function openAddPortfolioModal() {
+    document.getElementById('portfolioForm').reset();
+    document.getElementById('currentCover').style.display = 'none';
+    const modal = new bootstrap.Modal(document.getElementById('portfolioModal'));
+    modal.show();
+  }
+
+  // 打开编辑作品集模态框
+  function openEditPortfolioModal(id) {
+    fetch(`/api/portfolio/projects/${id}`)
+            .then(response => response.json())
+            .then(data => {
+              // 从 data.data 中提取项目数据（假设后端返回 {success: true, data: projectData}）
+              const project = data.data || data; // 兼容两种可能的结构
+
+              document.getElementById('portfolioId').value = project.id;
+              document.getElementById('title').value = project.title;
+              document.getElementById('description').value = project.description;
+              document.getElementById('content').value = project.content;
+              document.getElementById('category').value = project.category;
+              document.getElementById('projectUrl').value = project.projectUrl;
+              document.getElementById('githubUrl').value = project.githubUrl;
+              document.getElementById('duration').value = project.duration;
+              document.getElementById('tags').value = project.tags ? project.tags.join(',') : '';
+
+              // 格式化日期
+              if (project.startDate) {
+                const date = new Date(project.startDate);
+                const formattedDate = date.toISOString().split('T')[0];
+                document.getElementById('startDate').value = formattedDate;
+              }
+
+              if (project.coverImage) {
+                document.getElementById('currentCover').src = `/uploads/portfolio/${project.coverImage}`;
+                document.getElementById('currentCover').style.display = 'block';
+              } else {
+                document.getElementById('currentCover').style.display = 'none';
+              }
+
+              const modal = new bootstrap.Modal(document.getElementById('portfolioModal'));
+              modal.show();
+            })
+            .catch(error => {
+              console.error('获取项目失败:', error);
+              alert('获取项目信息失败：' + error.message);
+            });
+  }
+
+  // 保存作品集（新增/编辑）
+  function savePortfolio() {
+    const formData = new FormData(document.getElementById('portfolioForm'));
+    const id = document.getElementById('portfolioId').value;
+    const url = id ? `/api/portfolio/projects/${id}` : '/api/portfolio/projects';
+    const method = id ? 'PUT' : 'POST';
+
+    fetch(url, {
+      method: method,
+      body: formData
+    })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                bootstrap.Modal.getInstance(document.getElementById('portfolioModal')).hide();
+                // 刷新当前页面以更新数据
+                location.reload();
+                alert('操作成功');
+              } else {
+                alert('操作失败：' + data.message);
+              }
+            })
+            .catch(error => {
+              alert('操作失败：' + error.message);
+            });
+  }
+
+  // 删除作品集
+  function deletePortfolio(id) {
+    if (confirm('确定删除该作品吗？删除后不可恢复！')) {
+      fetch(`/api/portfolio/projects/${id}`, {
+        method: 'DELETE'
+      })
+              .then(response => response.json())
+              .then(data => {
+                if (data.success) {
+                  // 刷新当前页面以更新数据
+                  location.reload();
+                  alert('删除成功');
+                } else {
+                  alert('删除失败：' + data.message);
+                }
+              })
+              .catch(error => {
+                alert('删除失败：' + error.message);
+              });
+    }
+  }
+
+  // 搜索作品集 - 修改为接收参数以匹配HTML调用
+  function searchContent(type) {
+    const searchTerm = document.getElementById('portfolioSearch').value;
+    window.location.href = `/admin/dashboard/portfolio?title=${encodeURIComponent(searchTerm)}`;
+  }
+
+  // 移除页面加载时的fetch调用，依赖Thymeleaf直接渲染
+  // document.addEventListener('DOMContentLoaded', loadPortfolioList);
+</script>
+</body>
+</html>

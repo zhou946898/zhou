@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="userTableFragment">
+  <div class="d-flex align-items-center mb-3">
+    <input type="text" class="form-control me-2" id="userSearch" style="width: 94%" placeholder="根据用户名搜索">
+    <button class="btn btn-primary" onclick="searchContent('user')" style="margin-right: 0">搜索</button>
+  </div>
+  <table class="table table-bordered table-striped">
+    <thead class="table-light">
+    <tr>
+      <th>ID</th>
+      <th>用户名</th>
+      <th>姓名</th>
+      <th>邮箱</th>
+      <th>学历</th>
+      <th>爱好</th>
+      <th>管理员状态</th>
+      <th>操作</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="user : ${users}">
+      <td th:text="${user.id}"></td>
+      <td th:text="${user.username}"></td>
+      <td th:text="${user.name}"></td>
+      <td th:text="${user.email}"></td>
+      <td th:text="${user.education}"></td>
+      <td th:text="${user.hobbies}"></td>
+      <td>
+        <span th:if="${user.isAdmin == 1}" class="badge bg-success">是</span>
+        <span th:if="${user.isAdmin == 0}" class="badge bg-secondary">否</span>
+      </td>
+      <td>
+        <a th:href="@{/admin/user/delete(id=${user.id})}" class="text-danger"
+           onclick="return confirm('确定删除？')">删除</a>
+        <a th:href="@{/admin/user/edit/{id}(id=${user.id})}" class="text-warning ms-2">修改</a>
+        <a th:href="@{/admin/toggleAdmin/{id}(id=${user.id})}"
+           th:class="${user.isAdmin == 1} ? 'text-danger ms-2' : 'text-info ms-2'"
+           th:text="${user.isAdmin == 1} ? '取消管理员' : '设为管理员'"
+           onclick="return confirm('确定要' + (${user.isAdmin == 1} ? '取消' : '设置') + '该用户的管理员身份吗？')">
+        </a>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+</body>
+</html>
