@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="#{register.title}">注册页面</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(to bottom right, #e0f7fa, #b2ebf2);
+        }
+
+        .register-container {
+            transition: transform 0.3s ease;
+        }
+
+        .register-container:hover {
+            transform: scale(1.02);
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="email"] {
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus,
+        input[type="email"]:focus {
+            border-color: #3b82f6;
+            outline: none;
+        }
+
+        input[type="button"],
+        a.login-button,
+        #getVerificationCode {
+            transition: background-color 0.3s ease;
+        }
+
+        /* 添加媒体查询 */
+        @media (max-width: 600px) {
+            .verification-code-group input[type="text"] {
+                width: 60%;
+                /* 缩小验证码输入框宽度 */
+            }
+        }
+    </style>
+</head>
+
+<body class="flex justify-center items-center min-h-screen">
+<div class="register-container bg-white p-8 rounded-xl shadow-2xl w-11/12 max-w-md space-y-6">
+    <h1 class="text-2xl font-bold text-center text-blue-700" th:text="#{register.title}"></h1>
+    <div class="language-switch text-center space-x-2">
+        <a href="?lang=en_US" onclick="setLanguage('en_US')" class="text-blue-700 hover:text-blue-900">English</a>
+        <span class="text-gray-500">|</span>
+        <a href="?lang=zh_CN" onclick="setLanguage('zh_CN')" class="text-blue-700 hover:text-blue-900">中文</a>
+    </div>
+    <p class="error text-red-500 text-center bg-white p-2 rounded-md shadow-md" id="errorMsg" th:if="${error}"
+       th:text="${error}"></p>
+    <span id="registerSuccess" class="text-green-500 text-center bg-white p-2 rounded-md shadow-md"
+          style="display: none;">注册成功，<span id="countdown">5</span> 秒后自动跳转登录页面...</span>
+    <form id="registerForm" method="post" class="space-y-6">
+        <div>
+            <label class="block text-gray-700 font-medium mb-1 required" th:text="#{register.username}"
+                   for="username">Username:（必填）</label>
+            <input type="text" id="username" name="username" required
+                   th:placeholder="#{register.Username_input_box}" placeholder="请输入用户名"
+                   class="w-full border border-gray-300 rounded-md p-3">
+        </div>
+        <div>
+            <label class="block text-gray-700 font-medium mb-1 required" th:text="#{register.password}"
+                   for="password">Password:（必填）</label>
+            <input type="password" id="password" name="password" required
+                   th:placeholder="#{register.Password_input_box}" placeholder="请输入密码"
+                   class="w-full border border-gray-300 rounded-md p-3">
+        </div>
+        <div>
+            <label class="block text-gray-700 font-medium mb-1" th:text="#{register.name}" for="name">Name:（选填）</label>
+            <input type="text" id="name" name="name" th:placeholder="#{register.Name_input_box}"
+                   placeholder="请输入姓名" class="w-full border border-gray-300 rounded-md p-3">
+        </div>
+        <div>
+            <label class="block text-gray-700 font-medium mb-1 required" th:text="#{register.email}"
+                   for="email">Email:（必填）</label>
+            <input type="email" id="email" name="email" required
+                   th:placeholder="#{register.QQ_email_input_box}" placeholder="请输入邮箱" oninput="checkEmail()"
+                   class="w-full border border-gray-300 rounded-md p-3">
+        </div>
+        <div class="verification-code-group flex space-x-3">
+            <input type="text" id="verificationCode" name="verificationCode"
+                   th:placeholder="#{register.Verification_code_input_box}" placeholder="请输入验证码"
+                   class="flex-1 border border-gray-300 rounded-md p-3">
+            <button type="button" id="getVerificationCode" th:text="#{register.Get_Verification_Code_Button}"
+                    disabled onclick="getCode()"
+                    class="bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-6 rounded-md">获取验证码</button>
+        </div>
+        <span id="verificationCodeError" class="text-red-500 text-sm hidden">验证码不正确</span>
+        <div>
+            <label class="block text-gray-700 font-medium mb-1" th:text="#{register.education}"
+                   for="education">Education:（选填）</label>
+            <input type="text" id="education" name="education" th:placeholder="#{register.Education_input_box}"
+                   placeholder="请输入学历" class="w-full border border-gray-300 rounded-md p-3">
+        </div>
+        <div>
+            <label class="block text-gray-700 font-medium mb-1" th:text="#{register.hobbies}"
+                   for="hobbies">Hobbies:（选填）</label>
+            <input type="text" id="hobbies" name="hobbies"
+                   th:placeholder="#{register.Interest_and_hobby_input_box}" placeholder="请输入爱好"
+                   class="w-full border border-gray-300 rounded-md p-3">
+        </div>
+        <div class="button-container flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+            <input type="button" id="submitButton" th:value="#{register.submit}" onclick="submitForm()"
+                   class="bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-6 rounded-md">
+            <a href="/login" class="login-button bg-green-700 hover:bg-green-800 text-white font-bold py-3 px-6 rounded-md text-center"
+               th:text="#{login.submit}">登录</a>
+        </div>
+    </form>
+</div>
+<script>
+    // 获取错误提示元素
+    const errorMsg = document.getElementById('errorMsg');
+    if (errorMsg) {
+        errorMsg.style.display = 'block';
+    }
+
+    // 获取用户名输入框
+    const usernameInput = document.getElementById('username');
+    if (usernameInput && errorMsg) {
+        // 为用户名输入框添加点击事件监听器
+        usernameInput.addEventListener('click', () => {
+            errorMsg.style.display = 'none';
+        });
+    }
+
+    const emailInput = document.getElementById('email');
+    const getVerificationCodeButton = document.getElementById('getVerificationCode');
+    const verificationCodeInput = document.getElementById('verificationCode');
+    const verificationCodeError = document.getElementById('verificationCodeError');
+    const registerSuccess = document.getElementById('registerSuccess');
+    const countdownElement = document.getElementById('countdown');
+    let emailCooldown = {};
+
+    // 语言包
+    const languages = {
+        'zh_CN': {
+            getCodeButton: '获取验证码',
+            resendCode: '重新获取 (%ds)',
+            qqEmailError: '请输入有效的 QQ 邮箱地址',
+            cooldownError: '请在 %d 秒后再次获取验证码',
+            usernameError: '用户名必须以字母开头，且为字母与数字的组合，不能是纯字母',
+            passwordError: '密码必须为数字和字母的组合，且长度不少于8位'
+        },
+        'en_US': {
+            getCodeButton: 'Get Verification Code',
+            resendCode: 'Resend (%ds)',
+            qqEmailError: 'Please enter a valid QQ email address',
+            cooldownError: 'Please try again in %d seconds',
+            usernameError: 'Username must start with a letter and be a combination of letters and numbers, not just letters',
+            passwordError: 'Password must be a combination of numbers and letters, and at least 8 characters long'
+        }
+    };
+
+    // 获取当前语言
+    let currentLanguage = 'zh_CN';
+    const langParam = new URLSearchParams(window.location.search).get('lang');
+    if (langParam) {
+        currentLanguage = langParam;
+    }
+
+    // 设置语言
+    function setLanguage(lang) {
+        currentLanguage = lang;
+        getVerificationCodeButton.textContent = languages[currentLanguage].getCodeButton;
+    }
+
+    function checkEmail() {
+        const email = emailInput.value;
+        getVerificationCodeButton.disabled = email === '';
+        getVerificationCodeButton.textContent = languages[currentLanguage].getCodeButton;
+    }
+
+    function getCode() {
+        const email = emailInput.value;
+        const qqEmailRegex = /^[a-zA-Z0-9_-]+@qq\.com$/;
+        if (!qqEmailRegex.test(email)) {
+            alert(languages[currentLanguage].qqEmailError);
+            return;
+        }
+        if (emailCooldown[email] && Date.now() - emailCooldown[email] < 60000) {
+            const remainingTime = Math.ceil((60000 - (Date.now() - emailCooldown[email])) / 1000);
+            alert(languages[currentLanguage].cooldownError.replace('%d', remainingTime));
+            return;
+        }
+        emailCooldown[email] = Date.now();
+        getVerificationCodeButton.disabled = true;
+        let countdown = 60;
+        const intervalId = setInterval(() => {
+            if (countdown > 0) {
+                getVerificationCodeButton.textContent = languages[currentLanguage].resendCode.replace('%d', countdown);
+                countdown--;
+            } else {
+                clearInterval(intervalId);
+                getVerificationCodeButton.textContent = languages[currentLanguage].getCodeButton;
+                getVerificationCodeButton.disabled = false;
+            }
+        }, 1000);
+
+        // 发送请求到后端
+        fetch(`/sendVerificationCode?email=${email}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('请求失败');
+                }
+                console.log('验证码发送成功');
+            })
+            .catch(error => {
+                console.error('验证码发送失败:', error);
+            });
+    }
+
+    async function submitForm() {
+        const username = usernameInput.value.trim();
+        const password = document.getElementById('password').value.trim();
+        const email = emailInput.value.trim();
+        const verificationCode = verificationCodeInput.value.trim();
+
+        // 验证用户名
+        const usernameRegex = /^[a-zA-Z][a-zA-Z0-9]*[0-9][a-zA-Z0-9]*$/;
+        if (!usernameRegex.test(username)) {
+            alert(languages[currentLanguage].usernameError);
+            return;
+        }
+
+        // 验证密码
+        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+        if (!passwordRegex.test(password)) {
+            alert(languages[currentLanguage].passwordError);
+            return;
+        }
+
+        if (username === '') {
+            alert('请输入用户名');
+            return;
+        }
+
+        if (password === '') {
+            alert('请输入密码');
+            return;
+        }
+
+        if (email === '') {
+            alert('请输入邮箱');
+            return;
+        }
+
+        if (verificationCode === '') {
+            alert('请输入验证码');
+            return;
+        }
+
+        const form = document.getElementById('registerForm');
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch('/register', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.text();
+            if (result === '注册成功') {
+                verificationCodeError.style.display = 'none';
+                registerSuccess.style.display = 'block';
+                // 存储用户名和密码到本地存储
+                localStorage.setItem('registeredUsername', username);
+                localStorage.setItem('registeredPassword', password);
+                let countdown = 5;
+                const countdownInterval = setInterval(() => {
+                    countdownElement.textContent = countdown;
+                    countdown--;
+                    if (countdown < 0) {
+                        clearInterval(countdownInterval);
+                        window.location.href = '/login';
+                    }
+                }, 1000);
+            } else {
+                verificationCodeError.style.display = 'block';
+                verificationCodeError.textContent = result;
+                verificationCodeInput.value = '';
+                registerSuccess.style.display = 'none';
+            }
+        } catch (error) {
+            console.error('注册失败:', error);
+            verificationCodeError.style.display = 'block';
+            verificationCodeInput.value = '';
+            registerSuccess.style.display = 'none';
+        }
+    }
+</script>
+</body>
+
+</html>

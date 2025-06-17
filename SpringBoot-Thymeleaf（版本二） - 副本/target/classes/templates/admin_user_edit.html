@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>修改用户信息</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #e6f7ff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        .edit-container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 350px;
+        }
+        h1 {
+            text-align: center;
+            color: #007bff;
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #6c757d;
+        }
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+        }
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        input[type="submit"],
+        input[type="button"] {
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            color: white;
+            cursor: pointer;
+        }
+        input[type="submit"] {
+            background-color: #007bff;
+        }
+        input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+        input[type="button"] {
+            background-color: #28a745;
+        }
+        input[type="button"]:hover {
+            background-color: #218838;
+        }
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+<div class="edit-container">
+    <h1>修改用户信息</h1>
+    <form action="#" th:action="@{/admin/user/edit/{id}(id=${user.id})}" method="post" th:object="${user}">
+        <label for="username">用户名:</label>
+        <input type="text" id="username" th:field="*{username}">
+        <label for="password">密码:</label>
+        <input type="password" id="password" th:field="*{password}">
+        <label for="name">姓名:</label>
+        <input type="text" id="name" th:field="*{name}">
+        <label for="email">邮箱:</label>
+        <input type="text" id="email" th:field="*{email}">
+        <label for="education">学历:</label>
+        <input type="text" id="education" th:field="*{education}">
+        <label for="hobbies">爱好:</label>
+        <input type="text" id="hobbies" th:field="*{hobbies}">
+        <div class="button-container">
+            <input type="submit" value="保存修改">
+            <input type="button" value="取消修改" onclick="window.history.back();">
+        </div>
+    </form>
+</div>
+</body>
+</html>
